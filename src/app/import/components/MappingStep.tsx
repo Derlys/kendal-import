@@ -2,151 +2,100 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import type { FieldSuggestion, SystemField, Row } from "@/lib/mapping/types";
+import { FieldSuggestion, SystemField } from "@/lib/mapping/types";
 
-interface MappingStepProps {
-  columns: string[];
-  data: Row[];
-  suggestions: FieldSuggestion[];
-  onBack: () => void;
-}
+const MAPPABLE_FIELDS: SystemField[] = [
+  "firstName",
+  "lastName",
+  "email",
+  "phone",
+  "agentUid",
+];
 
 export function MappingStep({
   columns,
-  data,
   suggestions,
   onBack,
-}: MappingStepProps) {
-  const [mappings, setMappings] = useState<Record<string, SystemField>>(
+}: {
+  columns: string[];
+  suggestions: FieldSuggestion[];
+  onBack: () => void;
+}) {
+  const [mappings, setMappings] = useState<Record<string, SystemField | "">>(
     Object.fromEntries(
-      suggestions.map((s) => [s.column, s.suggested ?? ""]),
-    ) as Record<string, SystemField>,
+      suggestions.map((s) => [s.column, (s.suggested as SystemField) || ""]),
+    ),
   );
 
   const handleChange = (column: string, value: string) => {
     setMappings((prev) => ({ ...prev, [column]: value as SystemField }));
   };
 
-  const getConfidenceColor = (level: string) => {
-    switch (level) {
-      case "high":
-        return "text-green-600 bg-green-50 border-green-200";
-      case "medium":
-        return "text-amber-600 bg-amber-50 border-amber-200";
-      default:
-        return "text-gray-500 bg-gray-50 border-gray-200";
+  const handleContinue = () => {
+    const unassigned = Object.values(mappings).filter((m) => !m);
+    if (unassigned.length > 0) {
+      alert("Please map all columns before continuing.");
+      return;
     }
+    console.log("✅ Final mappings ready:", mappings);
   };
 
   return (
-    <Card className="max-w-3xl mx-auto shadow-sm border">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold text-gray-800">
-          Detect Fields
-        </CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
-          Review detected columns and confirm mappings before importing your
-          contacts.
-        </p>
-      </CardHeader>
+    <div className="p-6 max-w-3xl mx-auto bg-white shadow-sm rounded-xl">
+      <h2 className="text-lg font-semibold mb-4">
+        Map Fields to Contact Schema
+      </h2>
 
-      <CardContent>
-        <div className="grid grid-cols-3 font-medium text-sm border-b pb-2 mb-3 text-gray-600">
-          <span>File Column</span>
-          <span>Suggested Mapping</span>
-          <span>Confidence</span>
-        </div>
+      <div className="grid grid-cols-3 font-medium text-sm border-b pb-2 mb-2">
+        <span>File Column</span>
+        <span>Suggested Mapping</span>
+        <span>Confidence</span>
+      </div>
 
-        {suggestions.map((s) => (
+      {suggestions.map((s) => {
+        const isMappable = MAPPABLE_FIELDS.includes(s.suggested as SystemField);
+        const disabled =
+          !isMappable && !MAPPABLE_FIELDS.includes(s.column as SystemField);
+
+        return (
           <div
             key={s.column}
-            className="grid grid-cols-3 items-center border-b py-3 text-sm hover:bg-gray-50 transition"
+            className={`grid grid-cols-3 items-center border-b py-2 text-sm ${
+              disabled ? "opacity-60" : ""
+            }`}
           >
-            <span className="font-mono text-gray-700">{s.column}</span>
-            <select
-              value={mappings[s.column] || s.suggested}
-              onChange={(e) => handleChange(s.column, e.target.value)}
-              className="border rounded-md px-2 py-1 text-gray-700 focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Select field</option>
-              {["firstName", "lastName", "phone", "email", "agentUid"].map(
-                (f) => (
+            <span>{s.column}</span>
+
+            {disabled ? (
+              <span className="italic text-gray-400">
+                Ignored (system field)
+              </span>
+            ) : (
+              <select
+                value={mappings[s.column] || s.suggested}
+                onChange={(e) => handleChange(s.column, e.target.value)}
+                className="border rounded p-1 bg-white"
+              >
+                <option value="">Select field</option>
+                {MAPPABLE_FIELDS.map((f) => (
                   <option key={f} value={f}>
                     {f}
                   </option>
-                ),
-              )}
-            </select>
-            <span
-              className={cn(
-                "text-xs px-2 py-1 border rounded-md text-center capitalize w-fit",
-                getConfidenceColor(s.confidence),
-              )}
-            >
-              {s.confidence}
-            </span>
-          </div>
-        ))}
-
-        {/* Preview table */}
-        <div className="mt-8">
-          <h3 className="font-medium mb-2 text-gray-800">Preview</h3>
-          <div className="overflow-x-auto border rounded-md">
-            <table className="w-full text-sm border-collapse">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  {columns.slice(0, 5).map((col) => (
-                    <th
-                      key={col}
-                      className="text-left px-3 py-2 text-gray-600 font-medium"
-                    >
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.slice(0, 3).map((row, idx) => (
-                  <tr key={idx} className="border-b hover:bg-gray-50">
-                    {columns.slice(0, 5).map((col) => (
-                      <td key={col} className="px-3 py-2 text-gray-700">
-                        {String(row[col] ?? "")}
-                      </td>
-                    ))}
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </CardContent>
+              </select>
+            )}
 
-      <CardFooter className="flex justify-between mt-6">
+            <span className="text-gray-500 text-sm">{s.confidence}</span>
+          </div>
+        );
+      })}
+
+      <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={onBack}>
           ← Back
         </Button>
-        <Button
-          type="button"
-          onClick={() => {
-            const unassigned = Object.values(mappings).filter((m) => !m);
-            if (unassigned.length > 0) {
-              alert("Please map all columns before continuing.");
-              return;
-            }
-            console.log("✅ Final mappings ready:", mappings);
-          }}
-        >
-          Continue →
-        </Button>
-      </CardFooter>
-    </Card>
+        <Button onClick={handleContinue}>Continue →</Button>
+      </div>
+    </div>
   );
 }
