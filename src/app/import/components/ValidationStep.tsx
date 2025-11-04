@@ -8,20 +8,16 @@ interface ValidationStepProps {
   data: Row[];
   mappings: Record<string, string>;
   onBack: () => void;
+  onNext: () => void;
 }
 
 export function ValidationStep({
   data,
   mappings,
   onBack,
+  onNext,
 }: ValidationStepProps) {
   const [invalidRows, setInvalidRows] = useState<number[]>([]);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importSummary, setImportSummary] = useState<{
-    created: number;
-    merged: number;
-    skipped: number;
-  } | null>(null);
 
   useEffect(() => {
     const invalids: number[] = [];
@@ -33,25 +29,8 @@ export function ValidationStep({
     setInvalidRows(invalids);
   }, [data, mappings]);
 
-  const handleImport = async () => {
-    setIsImporting(true);
-    try {
-      const response = await fetch("/api/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data, mappings }),
-      });
-      const result = await response.json();
-      setImportSummary(result.summary || null);
-    } catch (error) {
-      console.error("Import error:", error);
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white shadow-sm rounded-xl border">
+    <div className="p-6 max-w-3xl mx-auto bg-white shadow-sm rounded-xl border border-gray-200">
       <h2 className="text-lg font-semibold mb-4">Validation Summary</h2>
 
       {invalidRows.length > 0 ? (
@@ -65,28 +44,12 @@ export function ValidationStep({
         </p>
       )}
 
-      {importSummary ? (
-        <div className="bg-gray-50 p-4 rounded-md mt-4 text-sm">
-          <p>
-            <b>Created:</b> {importSummary.created}
-          </p>
-          <p>
-            <b>Merged:</b> {importSummary.merged}
-          </p>
-          <p>
-            <b>Skipped:</b> {importSummary.skipped}
-          </p>
-        </div>
-      ) : (
-        <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={onBack}>
-            ← Back
-          </Button>
-          <Button onClick={handleImport} disabled={isImporting}>
-            {isImporting ? "Importing..." : "Start Import"}
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-between mt-6">
+        <Button variant="outline" onClick={onBack}>
+          ← Back
+        </Button>
+        <Button onClick={onNext}>Start Import</Button>
+      </div>
     </div>
   );
 }
