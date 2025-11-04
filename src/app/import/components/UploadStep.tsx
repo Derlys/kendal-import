@@ -89,7 +89,7 @@ export function UploadStep({
   };
 
   return (
-    <div className="p-8 border rounded-xl text-center bg-white shadow-sm">
+    <div className="p-8 border rounded-xl text-center bg-white shadow-sm transition-all duration-300 hover:shadow-md">
       <h2 className="text-xl font-semibold mb-3">Upload your contacts file</h2>
       <p className="text-sm text-gray-500 mb-6">
         Supported formats: <strong>.csv</strong> or <strong>.xlsx</strong>
@@ -108,7 +108,7 @@ export function UploadStep({
 
       <Button
         onClick={() => fileInputRef.current?.click()}
-        className="px-6 py-2"
+        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
       >
         Choose File
       </Button>
