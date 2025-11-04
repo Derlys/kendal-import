@@ -40,13 +40,12 @@ export function MappingStep({
       return;
     }
 
-    console.log("✅ Final mappings ready:", mappings);
     onNext(mappings);
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white shadow-sm rounded-xl">
-      <h2 className="text-lg font-semibold mb-4">
+    <div className="p-6 max-w-3xl mx-auto bg-white shadow-sm rounded-xl border border-gray-200">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">
         Map Fields to Contact Schema
       </h2>
 
