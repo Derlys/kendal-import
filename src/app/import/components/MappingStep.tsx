@@ -16,10 +16,12 @@ export function MappingStep({
   columns,
   suggestions,
   onBack,
+  onNext,
 }: {
   columns: string[];
   suggestions: FieldSuggestion[];
   onBack: () => void;
+  onNext: (mappings: Record<string, string>) => void;
 }) {
   const [mappings, setMappings] = useState<Record<string, SystemField | "">>(
     Object.fromEntries(
@@ -37,7 +39,9 @@ export function MappingStep({
       alert("Please map all columns before continuing.");
       return;
     }
+
     console.log("✅ Final mappings ready:", mappings);
+    onNext(mappings);
   };
 
   return (
